@@ -1,0 +1,63 @@
+/* General App Styling */
+body {
+    color: #FFFFFF; /* White text */
+    background-color: #4682B4; /* Light navy blue (SteelBlue) */
+    border: 8px solid #0000CD; /* Medium blue border */
+    box-sizing: border-box;
+    min-height: 100vh;
+}
+
+/* Main content area */
+.main .block-container {
+    padding-top: 2rem;
+    padding-bottom: 2rem;
+}
+
+/* Sidebar Styling */
+.css-1d391kg {
+    background-color: #00008B; /* DarkBlue sidebar */
+    border-right: 2px solid #0000CD; /* Medium blue border */
+}
+
+.css-1d391kg .st-emotion-cache-17x3w4p, .css-1d391kg .st-emotion-cache-h4y2h4 {
+    color: #FFFFFF; /* White text in sidebar */
+}
+
+/* Button Styling */
+.stButton>button {
+    border: 2px solid #0000CD;
+    background-color: #0000CD;
+    color: #FFFFFF;
+    border-radius: 5px;
+    padding: 10px 20px;
+    transition: all 0.3s ease-in-out;
+}
+
+.stButton>button:hover {
+    background-color: #FFFFFF;
+    color: #0000CD;
+    border-color: #0000CD;
+}
+
+/* Input Widgets */
+.stTextInput>div>div>input, .stDateInput>div>div>input, .stTimeInput>div>div>input, .stTextArea>div>textarea, .stSelectbox>div>div {
+    background-color: #3d6a98;
+    color: #FFFFFF;
+    border: 1px solid #0000CD;
+}
+
+/* Animations */
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.main {
+    animation: fadeIn 0.5s ease-in-out;
+}
+
+/* Title */
+h1, h2, h3 {
+    color: #FFFFFF; /* White titles */
+    text-shadow: 2px 2px 4px #00008B;
+}
