@@ -1,4 +1,11 @@
 import streamlit as st
+import os
+from dotenv import load_dotenv
+from langchain_community.document_loaders import PyPDFLoader
+from langchain.text_splitter import RecursiveCharacterTextSplitter
+from langchain.prompts import PromptTemplate
+from langchain_openai import OpenAI
+
 
 # --- Page Configuration ---
 st.set_page_config(
@@ -69,14 +76,78 @@ def contact_us():
 def ai_nutritionist():
     st.header("AI Nutritionist Assistant 🤖")
     st.markdown("Upload your blood report to get a personalized diet plan from our AI assistant.")
+
+    # Load environment variables
+    load_dotenv()
+
+    # API Key Input - pre-filled from .env if available
+    api_key = st.text_input(
+        "Enter your OpenAI API Key", 
+        type="password", 
+        value=os.getenv("OPENAI_API_KEY", ""), 
+        help="Get your key from https://platform.openai.com/account/api-keys or add it to a .env file."
+    )
+
+    # Model Selection
+    model_name = st.selectbox("Select LLM Model", ["gpt-3.5-turbo-instruct", "gpt-4o", "text-davinci-003"])
     
-    st.selectbox("Select LLM Model", ["Vita-GPT-4o", "Vita-Claude-3", "Vita-Gemini-Pro"])
-    st.file_uploader("Upload your latest blood report (PDF, JPG, PNG)", type=['pdf', 'jpg', 'png'])
-    
+    # File Uploader
+    uploaded_file = st.file_uploader("Upload your latest blood report (PDF only)", type=['pdf'])
+
     if st.button("Get Diet Help"):
+        if not api_key:
+            st.error("Please enter your OpenAI API key.")
+            return
+        if uploaded_file is None:
+            st.error("Please upload your blood report.")
+            return
+
         with st.spinner("Our AI Nutritionist is analyzing your report..."):
-            st.success("Analysis complete!")
-            st.text_area("Your Personalized Diet Plan", "Based on your report, we recommend incorporating more leafy greens for iron, and consuming fatty fish for Vitamin D...", height=300)
+            try:
+                # Save uploaded file temporarily
+                with open(uploaded_file.name, "wb") as f:
+                    f.write(uploaded_file.getbuffer())
+                
+                # 1. Load the PDF
+                loader = PyPDFLoader(uploaded_file.name)
+                documents = loader.load()
+                
+                # 2. Split the document into chunks
+                text_splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=100)
+                docs = text_splitter.split_documents(documents)
+                
+                # Combine chunks into a single text
+                report_text = " ".join([doc.page_content for doc in docs])
+
+                # 3. Create a prompt template
+                prompt_template = """
+                You are an expert nutritionist. Analyze the following blood report and provide a personalized diet plan.
+                The diet plan should be easy to follow and include suggestions for breakfast, lunch, and dinner.
+                Focus on addressing any deficiencies or issues highlighted in the report.
+
+                Blood Report Data:
+                {report}
+
+                Your Personalized Diet Plan:
+                """
+                prompt = PromptTemplate(template=prompt_template, input_variables=["report"])
+
+                # 4. Initialize the LLM
+                llm = OpenAI(api_key=api_key, model_name=model_name, temperature=0.7)
+                llm_chain = prompt | llm
+
+                # 5. Get the response
+                response = llm_chain.invoke({"report": report_text})
+                
+                st.success("Analysis complete!")
+                st.text_area("Your Personalized Diet Plan", response, height=400)
+
+            except Exception as e:
+                st.error(f"An error occurred: {e}")
+            finally:
+                # Clean up the temporary file
+                if os.path.exists(uploaded_file.name):
+                    os.remove(uploaded_file.name)
 
 # --- Main App Logic ---
 def login_page():
